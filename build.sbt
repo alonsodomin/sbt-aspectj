@@ -1,6 +1,8 @@
 
 sbtPlugin := true
 
+crossSbtVersions := Seq("0.13.16", "1.0.0-RC3")
+
 organization := "com.typesafe.sbt"
 name := "sbt-aspectj"
 version := "0.11-SNAPSHOT"

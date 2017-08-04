@@ -80,10 +80,10 @@ object SbtAspectj extends AutoPlugin {
   object Ajc {
     def writeLintProperties = Def.task {
       val props = lintProperties.value
+      val lintPropertiesOut = aspectjDirectory.value / "lint.properties"
       if (props.nonEmpty) {
-        val file = aspectjDirectory.value / "lint.properties"
-        IO.writeLines(file, props)
-        Some(file)
+        IO.writeLines(lintPropertiesOut, props)
+        Some(lintPropertiesOut)
       } else None
     }
 
@@ -97,17 +97,21 @@ object SbtAspectj extends AutoPlugin {
     }
 
     def ajcTask = Def.task {
-      val cacheDir  = streams.value.cacheDirectory / "aspectj"
-      val outputDir = classDirectory.value
+      val inputsV           = inputs.value
+      val sourcesV          = sources.value
+      val binariesV         = binaries.value
+      val aspectjOptionsV   = aspectjOptions.value
+      val aspectjClasspathV = aspectjClasspath.value
+      val streamsV          = streams.value
+      val cacheDir          = streamsV.cacheDirectory / "aspectj"
+      val outputDir         = classDirectory.value
 
       val cached = FileFunction.cached(cacheDir / "ajc-inputs", FilesInfo.hash) { _ =>
-        runAjc(inputs.value, sources.value, binaries.value, outputDir,
-          aspectjOptions.value, aspectjClasspath.value.files, cacheDir, streams.value.log
-        )
+        runAjc(inputsV, sourcesV, binariesV, outputDir, aspectjOptionsV, aspectjClasspathV.files, cacheDir, streamsV.log)
         Set(outputDir)
       }
-      val expanded = (inputs.value ++ binaries.value) flatMap { i => if (i.isDirectory) (i ** "*.class").get else Seq(i) }
-      val cacheInputs = (expanded ++ sources.value).toSet
+      val expanded = (inputsV ++ binariesV) flatMap { i => if (i.isDirectory) (i ** "*.class").get else Seq(i) }
+      val cacheInputs = (expanded ++ sourcesV).toSet
       cached(cacheInputs)
       outputDir
     }
